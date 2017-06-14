@@ -18,24 +18,22 @@ relacionAgenteNM relacionesN agente pos | pos == agente = head relacionesN
 --2. Que dado un agente, el n´umero total de agentes del sistema y un estado determinado, indique 
 --el conjunto de agentes enemigos.
 enemigos :: Agente -> Integer -> Estado -> Set Agente
-enemigos agente cantidadAgentes estado | agentePertenece estado agente = agentesEnemigos estado agentes
-                                       | otherwise = estado
+enemigos agente cantidadAgentes estado | not (agentePertenece estado agente) = estado
+                                       | otherwise = quitarAgentes agentes estado
                                          where agentes = [1..cantidadAgentes]
---Si estan ordenados!!!
-
+                 
 --Auxiliares:
---Recibe un estado y devuelve si el agente pertenece a e se estado
-agentePertenece :: Estado -> Agente -> Bool
+--Recibe una lista de agentes y un agente, y devuelve si el agente pertence o no a la lista
+agentePertenece :: Set Agente -> Agente -> Bool
 agentePertenece [] _ = False
 agentePertenece estado agente | head estado == agente = True
                               | otherwise = agentePertenece (tail estado) agente
 
---Recibe un estado y devuelve el otro bando
-agentesEnemigos :: Estado -> Set Agente -> Estado
-agentesEnemigos _ [] = []
-agentesEnemigos [] agentes = agentes
-agentesEnemigos estado agentes | head estado == head agentes = agentesEnemigos (tail estado)  (tail agentes)
-                               | otherwise = [head agentes] ++ agentesEnemigos estado (tail agentes)
+--Recibe dos listas de agentes y devuelve la resta de ambas
+quitarAgentes :: Set Agente -> Set Agente -> Set Agente
+quitarAgentes [] _ = []
+quitarAgentes (headAgentes:tailAgentes) estado | not (agentePertenece estado headAgentes) = headAgentes : quitarAgentes tailAgentes estado
+                             | otherwise = quitarAgentes tailAgentes estado
 
 --3. Que dado un agente, devuelve su frustracion que es la suma de los valores de su relaci´on con cada uno de los
 --agentes del otro bando.
@@ -67,11 +65,22 @@ predicciones = undefined
 
 
 
+--Agunas funciones extra:
+--2. Que dado un agente, el n´umero total de agentes del sistema y un estado ORDENADO, indique 
+--el conjunto de agentes enemigos.
+enemigosConOrden :: Agente -> Integer -> Estado -> Set Agente
+enemigosConOrden agente cantidadAgentes estado | agentePertenece estado agente = agentesEnemigos estado agentes
+                                       | otherwise = estado
+                                         where agentes = [1..cantidadAgentes]
+--Si estan ordenados!!!
 
+--Auxiliares:
+--Recibe un estado y devuelve el otro bando
+agentesEnemigos :: Estado -> Set Agente -> Estado
+agentesEnemigos _ [] = []
+agentesEnemigos [] agentes = agentes
+agentesEnemigos estado agentes | head estado == head agentes = agentesEnemigos (tail estado)  (tail agentes)
+                               | otherwise = [head agentes] ++ agentesEnemigos estado (tail agentes)
 
-
-
-
-
-
---
+--Nos parecio interesante agregar esta funcion porque:
+--si el estado esta ordenado de menor a mayor esta funcion devuelve los enemigos mucho mas eficientemente
