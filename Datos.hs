@@ -7,6 +7,7 @@ type Estado = Set Agente
 type Relaciones = [[Float]]
 type Frustracion = Float
 type Energia = Float
+type Relacion = Float
 
 relacionesEjemplo :: Relaciones
 relacionesEjemplo = [[0, 2, -3], [2, 0, 5.2], [-3, 5.2, 0]]
