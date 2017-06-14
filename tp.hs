@@ -47,8 +47,17 @@ sumatoriaFrustracion :: Set Relacion -> Estado -> Frustracion
 sumatoriaFrustracion relacionesN [] = 0
 sumatoriaFrustracion relacionesN enemigos = relacionAgenteNM relacionesN (head enemigos) 1 + sumatoriaFrustracion relacionesN (tail enemigos)
 
+--4. Que dado las relaciones y un estado, devuelve la energia total del sistema, es decir, la suma de las frustraciones
+--de cada agente
+--Como las relaciones son simétricas, la suma de frustraciones de todos los agentes de un bando es igual a la suma de 
+-- frustraciones de los agentes del otro. Luego, calculamos una y la duplicamos para la enemigos total
 energia :: Relaciones -> Estado -> Energia
-energia = undefined
+energia relaciones estado = 2 * (energiaUnBando relaciones estado estado)
+
+--Recibe la matriz de relaciones, un estado y la lista de agentes del estado sobre la cual hacemos la recursion
+energiaUnBando :: Relaciones -> Estado -> Set Agente -> Energia
+energiaUnBando _ _ [] = 0
+energiaUnBando relaciones estado (headAgentes:tailAgentes) = frustracion headAgentes relaciones estado + energiaUnBando relaciones estado tailAgentes 
 
 adyacente :: Agente -> Estado -> Estado
 adyacente = undefined
