@@ -35,7 +35,7 @@ quitarAgentes [] _ = []
 quitarAgentes (headAgentes:tailAgentes) estado | not (agentePertenece estado headAgentes) = headAgentes : quitarAgentes tailAgentes estado
                              | otherwise = quitarAgentes tailAgentes estado
 
---3. Que dado un agente, devuelve su frustracion que es la suma de los valores de su relaci´on con cada uno de los
+--3. Que dado un agente, devuelve su frustracion que es la suma de los valores de su relación con cada uno de los
 --agentes del otro bando.
 frustracion :: Agente -> Relaciones -> Estado -> Frustracion
 frustracion agente relaciones estado = sumatoriaFrustracion (relacionesAgenteN  relaciones agente 1) (enemigos agente (cantAgentes) estado)
@@ -54,13 +54,33 @@ sumatoriaFrustracion relacionesN enemigos = relacionAgenteNM relacionesN (head e
 energia :: Relaciones -> Estado -> Energia
 energia relaciones estado = 2 * (energiaUnBando relaciones estado estado)
 
---Recibe la matriz de relaciones, un estado y la lista de agentes del estado sobre la cual hacemos la recursion
+--Auxiliares:
+--Recibe la matriz de relaciones, un estado y la lista de agentes del estado sobre la cual hacemos la recursión y
+-- devuelve la suma de las frustraciones de todos los agentes del estado.
 energiaUnBando :: Relaciones -> Estado -> Set Agente -> Energia
 energiaUnBando _ _ [] = 0
 energiaUnBando relaciones estado (headAgentes:tailAgentes) = frustracion headAgentes relaciones estado + energiaUnBando relaciones estado tailAgentes 
 
+--5. Que dado un agente y un estado, cambia al agente de bando
 adyacente :: Agente -> Estado -> Estado
-adyacente = undefined
+adyacente agente estado | agentePertenece estado agente = quitarUnAgente agente estado 
+                        | otherwise = agente : estado
+
+--No se si es mas eficiente la funcion 1 o la 2, porque:
+-- en la 1 uso el pertence entonces recorro toda la lista para ver si pertenece o no y si pertenece vuelvo a recorrer la lista para quitarlo
+-- y en la dos, recorro la lista una sola vez para quitarlos (pertenezca o no) y desp comparo el largo de la lista filtrada con la lista que tenia
+-- si el largo es igual es porque no pertenecia y entonces lo agrego pero no se como funciona la funcion length de haskell asi que no se si evaluar el length es mas rapido... se los dejo
+adyacente2 :: Agente -> Estado -> Estado
+adyacente2 agente estado | length estadoSinAgente == length estado = agente : estado
+                         | otherwise = estadoSinAgente 
+                          where estadoSinAgente = (quitarUnAgente agente estado)
+
+--Auxiliares:
+--Recibe un agente y un estado y devuelve el estado sin ese agente
+quitarUnAgente :: Agente -> Estado -> Estado
+quitarUnAgente agente [] = []
+quitarUnAgente agente (headEstado:tailEstado) | headEstado /= agente = headEstado : quitarUnAgente agente tailEstado
+                                              | otherwise = tailEstado
 
 esEstable :: Relaciones -> Estado -> Bool
 esEstable = undefined
