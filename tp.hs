@@ -94,6 +94,20 @@ predicciones = undefined
 
 
 
+--Funcion partes (puede servir para el 7, hay que modificarla porque para el ejercicio, si por ej son 4 agentes, el estado [3,2] es igual al [1,4] y el [1,2,4] es igual al [3])
+-- o sea, la funcion esta de partes trae démas pero no se si vinieron esa clase y la tienen asi que la dejo por si sirve
+partes:: Integer -> Set (Set Integer)
+partes 0 = [[]]
+partes n = (partes (n-1)) ++ (agregarATodas n (partes(n-1)))
+
+agregarATodas:: Integer -> [[Integer]] -> [[Integer]]
+agregarATodas n [] = []
+agregarATodas n (h:ls) = (h ++ [n]) : (agregarATodas n ls)
+
+--Fin Partes
+
+
+
 --Agunas funciones extra:
 --2. Que dado un agente, el n´umero total de agentes del sistema y un estado ORDENADO, indique 
 --el conjunto de agentes enemigos.
