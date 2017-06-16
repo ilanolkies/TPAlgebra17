@@ -130,13 +130,27 @@ estadosPosibles :: Integer -> Set Estado
 estadosPosibles 1 = [[1]]
 estadosPosibles cantidadAgentes = (estadosPosibles (cantidadAgentes-1)) ++ (agregarAgenteATodos cantidadAgentes (estadosPosibles(cantidadAgentes-1)))
 
+
 --Auxiliares
 agregarAgenteATodos:: Integer -> Set Estado -> Set Estado
 agregarAgenteATodos _ [] = []
 agregarAgenteATodos cantidadAgentes (headEstados:tailEstados) = (headEstados ++ [cantidadAgentes]) : (agregarAgenteATodos cantidadAgentes tailEstados)
 
+
+
+
+
+
+
+
+-- estadosPosibles :: Integer -> Set (Set Integer)
+-- estadosPosibles = undefined
+
+
 predicciones :: Relaciones -> [(Estado, Energia)]
 predicciones = undefined
+
+
 
 
 
@@ -157,8 +171,36 @@ esEstable2 relaciones estado = menorEnergia2 relaciones estado (toInteger (lengt
 
 menorEnergia2 :: Relaciones -> Estado -> Integer -> Bool
 menorEnergia2 _ _ 0 = True
-menorEnergia2 relaciones estado cantidadAgentes | energia relaciones estado > energia relaciones (adyacente cantidadAgentes estado) = False 
+menorEnergia2 relaciones estado cantidadAgentes | energia relaciones estado > energia relaciones (adyacente cantidadAgentes estado) = False
                                                 | otherwise = menorEnergia2 relaciones estado (cantidadAgentes - 1)
+
+--
+
+
+
+
+
+
+esEstable3 :: Relaciones -> Estado -> Bool
+esEstable3 _ []=False
+esEstable3 relaciones estado | energia relaciones estado <= menorEnergia3 relaciones estado (energia relaciones estado) estado = True
+                             | otherwise = False
+
+menorEnergia3 :: Relaciones -> Estado -> Energia -> Estado -> Energia
+menorEnergia3 relaciones estado energiaEstado estado2 | length estado == 1 && enerAdyacente <= energiaEstado = enerAdyacente
+                                                      | enerAdyacente <= energiaEstado = menorEnergia3 relaciones (tail estado) enerAdyacente estado2
+                                                      | otherwise = energiaEstado
+                                                        where enerAdyacente = energia relaciones (adyacente (head estado) estado2)
+
+--
+
+
+
+
+
+
+
+
 
 
 --Funcion partes (puede servir para el 7, hay que modificarla porque para el ejercicio, si por ej son 4 agentes, el estado [3,2] es igual al [1,4] y el [1,2,4] es igual al [3])
