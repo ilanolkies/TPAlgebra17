@@ -125,14 +125,15 @@ menorEnergia relaciones estado listaEstados | length listaEstados == 0 = energia
  pero igual hay q ver que no se rompa en ningun lado.....**NOTA**--}
 
 
+--Es la funcion de partes pero empieza con el 1 en el conjunto y asi no va a haber estados repetidos porque el 1er agente siempre pertence a los poasibles estados y no hay dos estados enemigos en los que este el 1 a la vez (esta en el estado A o en el B pero no en los dos, entonces no se repiten...)
+estadosPosibles :: Integer -> Set Estado
+estadosPosibles 1 = [[1]]
+estadosPosibles cantidadAgentes = (estadosPosibles (cantidadAgentes-1)) ++ (agregarAgenteATodos cantidadAgentes (estadosPosibles(cantidadAgentes-1)))
 
-
-
-
-
-
-estadosPosibles :: Integer -> Set (Set Integer)
-estadosPosibles = undefined
+--Auxiliares
+agregarAgenteATodos:: Integer -> Set Estado -> Set Estado
+agregarAgenteATodos _ [] = []
+agregarAgenteATodos cantidadAgentes (headEstados:tailEstados) = (headEstados ++ [cantidadAgentes]) : (agregarAgenteATodos cantidadAgentes tailEstados)
 
 predicciones :: Relaciones -> [(Estado, Energia)]
 predicciones = undefined
@@ -150,8 +151,14 @@ predicciones = undefined
 
 
 
+--Se me ocurrion esta otra forma para es estable, se las dejo
+esEstable2 :: Relaciones -> Estado -> Bool
+esEstable2 relaciones estado = menorEnergia2 relaciones estado (toInteger (length relaciones))
 
-
+menorEnergia2 :: Relaciones -> Estado -> Integer -> Bool
+menorEnergia2 _ _ 0 = True
+menorEnergia2 relaciones estado cantidadAgentes | energia relaciones estado > energia relaciones (adyacente cantidadAgentes estado) = False 
+                                                | otherwise = menorEnergia2 relaciones estado (cantidadAgentes - 1)
 
 
 --Funcion partes (puede servir para el 7, hay que modificarla porque para el ejercicio, si por ej son 4 agentes, el estado [3,2] es igual al [1,4] y el [1,2,4] es igual al [3])
