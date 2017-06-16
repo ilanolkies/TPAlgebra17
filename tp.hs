@@ -92,6 +92,7 @@ quitarUnAgente agente (headEstado:tailEstado) | headEstado /= agente = headEstad
 
 -- dadas las relaciones t un estado , te dice si ese estado es estable o no
 esEstable :: Relaciones -> Estado -> Bool
+esEstable _ []= False
 esEstable relaciones estado | energia relaciones estado <= menorEnergia relaciones estado (todosLosAdyacentes estado) = True
                             | otherwise = False
 

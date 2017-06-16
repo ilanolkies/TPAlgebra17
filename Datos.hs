@@ -13,11 +13,24 @@ relacionesEjemplo :: Relaciones
 relacionesEjemplo = [[0, 2, -3], [2, 0, 5.2], [-3, 5.2, 0]]
 
 relaciones5 :: Relaciones
-relaciones5 = [[0.0, 2.0, -3.0, 2.3, 5.4], 
-               [2.0, 0.0, 5.2, -2.4, 0.4], 
-               [-3.0, 5.2, 0, -1.7, -0.4], 
+relaciones5 = [[0.0, 2.0, -3.0, 2.3, 5.4],
+               [2.0, 0.0, 5.2, -2.4, 0.4],
+               [-3.0, 5.2, 0, -1.7, -0.4],
                [2.3, -2.4, -1.7, 0.0, 0.2],
                [5.4, 0.4, -0.4, 0.2, 0.0]]
+relacionCero :: Relaciones
+relacionCero = [[0,-1,1,-1],
+                [-1,0,-1,1],
+                [1,-1,0,1],
+                [-1,1,1,0]]
+
+--
+relacionMenosDos :: Relaciones
+relacionMenosDos = [[0,-1,-1,-1],
+                    [-1,0,-1,1],
+                    [-1,-1,0,1],
+                    [-1,1,1,0]]
+
 
 --b)
 relacionesSegundaGuerra :: Relaciones
