@@ -149,9 +149,10 @@ agregarAgenteATodos cantidadAgentes (headEstados:tailEstados) = (headEstados ++ 
 
 
 predicciones :: Relaciones -> [(Estado, Energia)]
+predicciones [] =error "no hay relaciones"
 predicciones [[]] = error "no hay relaciones"
 predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAgentes )
-                           where cantidadAgentes = (toInteger (length (head relaciones)))
+                           where cantidadAgentes = (toInteger (length relaciones))
 
 --Auxiliare de predicciones
 auxPredicciones :: Relaciones -> Set Estado ->[(Estado,Energia)]
