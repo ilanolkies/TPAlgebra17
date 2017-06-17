@@ -43,7 +43,7 @@ frustracion agente relaciones estado = sumatoriaFrustracion (relacionesAgenteN  
 
 --Auxiliares:
 --Recibe las relaciones de un agente y sus enemigos y suma la relacion con cada uno de ellos
-sumatoriaFrustracion :: Set Relacion -> Estado -> Frustracion
+sumatoriaFrustracion :: Set Relacion -> Set Agente -> Frustracion
 sumatoriaFrustracion relacionesN [] = 0
 sumatoriaFrustracion relacionesN enemigos = relacionAgenteNM relacionesN (head enemigos) 1 + sumatoriaFrustracion relacionesN (tail enemigos)
 
@@ -65,15 +65,8 @@ energiaUnBando relaciones estado (headAgentes:tailAgentes) = frustracion headAge
 adyacente :: Agente -> Estado -> Estado
 adyacente agente estado | agentePertenece estado agente = quitarUnAgente agente estado
                         | otherwise = agente : estado
+                        --Recorro una vez para ver si pertenece y otra vez para sacarlo
 
---No se si es mas eficiente la funcion 1 o la 2, porque:
--- en la 1 uso el pertence entonces recorro toda la lista para ver si pertenece o no y si pertenece vuelvo a recorrer la lista para quitarlo
--- y en la dos, recorro la lista una sola vez para quitarlos (pertenezca o no) y desp comparo el largo de la lista filtrada con la lista que tenia
--- si el largo es igual es porque no pertenecia y entonces lo agrego pero no se como funciona la funcion length de haskell asi que no se si evaluar el length es mas rapido... se los dejo
-adyacente2 :: Agente -> Estado -> Estado
-adyacente2 agente estado | length estadoSinAgente == length estado = agente : estado
-                         | otherwise = estadoSinAgente
-                          where estadoSinAgente = (quitarUnAgente agente estado)
 
 --Auxiliares:
 --Recibe un agente y un estado y devuelve el estado sin ese agente
@@ -82,94 +75,60 @@ quitarUnAgente agente [] = []
 quitarUnAgente agente (headEstado:tailEstado) | headEstado /= agente = headEstado : quitarUnAgente agente tailEstado
                                               | otherwise = tailEstado
 
-
---
-
-
-
-
-
-
 -- dadas las relaciones t un estado , te dice si ese estado es estable o no
 esEstable :: Relaciones -> Estado -> Bool
 esEstable _ []= False
-esEstable relaciones estado | energia relaciones estado <= menorEnergia relaciones estado (todosLosAdyacentes estado) = True
+esEstable relaciones estado | energia relaciones estado <= estadoAdMenorEnergia relaciones estado (todosLosAdyacentes estado) = True
                             | otherwise = False
 
---
---Auxiliares para esEstable:
---
+--Auxiliare
 --dado un estado, devuelve todos los estados adyacentes de ese estado
-todosLosAdyacentes::Estado -> Set Estado
-todosLosAdyacentes estado = losAdyacentes estado estado
+todosLosAdyacentes :: Estado -> Set Estado
+todosLosAdyacentes estado = todosLosAdyacentesRecursion estado estado
 
---
--- auxiliar para todosLosAdyacentes
-{--**NOTA** es la forma que se para poder poner un solo parametro en "todosLosAdyacentes",
-y que se lea mejor en la esEstable , quiza habria q buscar una forma mejor para
-no usar 2 funciones nose.... **NOTA**--}
+--Hace la recursion de todos los estados para encontrar todos los adyacentes
+todosLosAdyacentesRecursion :: Estado -> Estado -> Set Estado
+todosLosAdyacentesRecursion [] _ = []
+todosLosAdyacentesRecursion estado estadoFijo = adyacente (head estado) estadoFijo : todosLosAdyacentesRecursion (tail estado) estadoFijo
 
-losAdyacentes :: Estado -> Estado -> Set Estado
-losAdyacentes [] estado2 = []
-losAdyacentes estado estado2 = adyacente (head estado) estado2 : losAdyacentes (tail estado) estado2
+--Dadas las relaciones, el estado y los estados adyacentes, devuelve la energia del estado con menor energia
+estadoAdMenorEnergia :: Relaciones -> Estado -> Set Estado -> Energia
+estadoAdMenorEnergia relaciones estado estadosAdyaentes | length estadosAdyaentes == 0 = energia relaciones estado
+                                                        | energia relaciones estado <= energia relaciones headAd = estadoAdMenorEnergia relaciones estado tailAd
+                                                        | otherwise = estadoAdMenorEnergia relaciones headAd tailAd
+                                                          where headAd = head estadosAdyaentes
+                                                                tailAd = tail estadosAdyaentes
 
---
-
---dadas las relaciones, el estado y los estados adyacentes,
---te devuelve la energia del estado con menor energia
-menorEnergia :: Relaciones -> Estado -> Set Estado -> Energia
-menorEnergia relaciones estado listaEstados | length listaEstados == 0 = energia relaciones estado
-                                            | energia relaciones estado <= energia relaciones (head listaEstados) = menorEnergia relaciones estado (tail listaEstados)
-                                            | otherwise = menorEnergia relaciones (head listaEstados) (tail listaEstados)
---
-{--**NOTA** lo probe solo con los dos ejemplos del pdf y da lo mismo,
- pero igual hay q ver que no se rompa en ningun lado.....**NOTA**--}
-
-
---Es la funcion de partes pero empieza con el 1 en el conjunto y asi no va a haber estados repetidos porque el 1er agente siempre pertence a los poasibles estados y no hay dos estados enemigos en los que este el 1 a la vez (esta en el estado A o en el B pero no en los dos, entonces no se repiten...)
+--Dado el n´umero de agentes del sistema, indica las posibles formas de formar bandos sin repetir estados indistinguibles. 
 estadosPosibles :: Integer -> Set Estado
 estadosPosibles 1 = [[1]]
-estadosPosibles cantidadAgentes = (estadosPosibles (cantidadAgentes-1)) ++ (agregarAgenteATodos cantidadAgentes (estadosPosibles(cantidadAgentes-1)))
-
+estadosPosibles cantidadAgentes = (estadosCantMenos1) ++ (agregarAgenteAEstados cantidadAgentes estadosCantMenos1)
+                                  where estadosCantMenos1 = estadosPosibles (cantidadAgentes-1)
 
 --Auxiliares
-agregarAgenteATodos:: Integer -> Set Estado -> Set Estado
-agregarAgenteATodos _ [] = []
-agregarAgenteATodos cantidadAgentes (headEstados:tailEstados) = (headEstados ++ [cantidadAgentes]) : (agregarAgenteATodos cantidadAgentes tailEstados)
-
-
-
-
-
-
-
-
--- estadosPosibles :: Integer -> Set (Set Integer)
--- estadosPosibles = undefined
-
+--Recibe un agente y una lista de estados, devuelve la lista con ese agente en cada estado.
+agregarAgenteAEstados:: Agente -> Set Estado -> Set Estado
+agregarAgenteAEstados _ [] = []
+agregarAgenteAEstados cantidadAgentes (headEstados:tailEstados) = (headEstados ++ [cantidadAgentes]) : (agregarAgenteAEstados cantidadAgentes tailEstados)
 
 predicciones :: Relaciones -> [(Estado, Energia)]
 predicciones [[]] = error "no hay relaciones"
-predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAgentes )
-                           where cantidadAgentes = (toInteger (length (head relaciones)))
+predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAgentes)
+                           where cantidadAgentes = toInteger (length (head relaciones))
 
 --Auxiliare de predicciones
 auxPredicciones :: Relaciones -> Set Estado ->[(Estado,Energia)]
 auxPredicciones _ [] = []
-auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles)| esEstable2 relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ auxPredicciones relaciones tailEstadosPosibles
-                                                                      | otherwise = auxPredicciones relaciones tailEstadosPosibles
---
+auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles)
+ | esEstable relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
+ | otherwise = siguientePrediccion
+   where siguientePrediccion = auxPredicciones relaciones tailEstados
 
 
 
 
-
-
-
-
-
-
---Se me ocurrion esta otra forma para es estable, se las dejo
+--Otras soluciones:
+--Nos parecio interesante dejar otras soluciones que encontramos para los mismos probelmas, y algunas con un pequeño comentario
 esEstable2 :: Relaciones -> Estado -> Bool
 esEstable2 relaciones estado = menorEnergia2 relaciones estado (toInteger (length relaciones))
 
@@ -177,13 +136,6 @@ menorEnergia2 :: Relaciones -> Estado -> Integer -> Bool
 menorEnergia2 _ _ 0 = True
 menorEnergia2 relaciones estado cantidadAgentes | energia relaciones estado > energia relaciones (adyacente cantidadAgentes estado) = False
                                                 | otherwise = menorEnergia2 relaciones estado (cantidadAgentes - 1)
-
---
-
-
-
-
-
 
 esEstable3 :: Relaciones -> Estado -> Bool
 esEstable3 _ []=False
@@ -196,50 +148,23 @@ menorEnergia3 relaciones estado energiaEstado estado2 | length estado == 1 && en
                                                       | otherwise = energiaEstado
                                                         where enerAdyacente = energia relaciones (adyacente (head estado) estado2)
 
---
-
-
-
-
-
-
-
-
-
-
---Funcion partes (puede servir para el 7, hay que modificarla porque para el ejercicio, si por ej son 4 agentes, el estado [3,2] es igual al [1,4] y el [1,2,4] es igual al [3])
--- o sea, la funcion esta de partes trae démas pero no se si vinieron esa clase y la tienen asi que la dejo por si sirve
-partes:: Integer -> Set (Set Integer)
-partes 0 = [[]]
-partes n = (partes (n-1)) ++ (agregarATodas n (partes(n-1)))
-
-agregarATodas:: Integer -> [[Integer]] -> [[Integer]]
-agregarATodas n [] = []
-agregarATodas n (h:ls) = (h ++ [n]) : (agregarATodas n ls)
-
---Fin Partes
-
-
-
-
-
---Agunas funciones extra:
---2. Que dado un agente, el n´umero total de agentes del sistema y un estado ORDENADO, indique
---el conjunto de agentes enemigos.
 enemigosConOrden :: Agente -> Integer -> Estado -> Set Agente
 enemigosConOrden agente cantidadAgentes estado | agentePertenece estado agente = agentesEnemigos estado agentes
                                                | otherwise = estado
-                                                where agentes = [1..cantidadAgentes]
---Si estan ordenados!!!
-
-
---Auxiliares:
---Recibe un estado y devuelve el otro bando
+                                                 where agentes = [1..cantidadAgentes]
+--Es mucho mas eficiente si los agentes estan ordenados!!!
 agentesEnemigos :: Estado -> Set Agente -> Estado
 agentesEnemigos _ [] = []
 agentesEnemigos [] agentes = agentes
 agentesEnemigos estado agentes | head estado == head agentes = agentesEnemigos (tail estado)  (tail agentes)
                                | otherwise = [head agentes] ++ agentesEnemigos estado (tail agentes)
 
---Nos parecio interesante agregar esta funcion porque:
---si el estado esta ordenado de menor a mayor esta funcion devuelve los enemigos mucho mas eficientemente
+adyacente2 :: Agente -> Estado -> Estado
+adyacente2 agente estado | length estadoSinAgente == length estado = agente : estado
+                         | otherwise = estadoSinAgente
+                          where estadoSinAgente = (quitarUnAgente agente estado)
+
+--No sabemos si es mas eficiente la funcion 1 o la 2:
+--1) Recorremos todos los agentes una vez para ver si pertenece, y en el peor de los casos por segunda vez para quitarlo.
+--2) Recorremos todos los agentes una vezpara quitarlo, y comparamos con la funcion length
+--No sabemos que procedimiento usa el length pero: si los recorre => los recorre 3 veces => la 1 es mas optima. Si no hay que ver como funciona.
