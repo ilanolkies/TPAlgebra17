@@ -1,105 +1,117 @@
 import Datos
 
---1. Que dados dos agentes, indique cu´al es su relaci´on.
+--1. Que dados dos agentes, indique cual es su relacion.
 relacion :: Relaciones -> Agente -> Agente -> Float
-relacion relaciones agenteN agenteM = relacionAgenteNM (relacionesAgenteN relaciones agenteN 1) agenteM 1
+relacion relaciones agenteN agenteM = relacionAgenteNM (relacionesAgenteN relaciones agenteN) agenteM
 
 --Auxiliares:
---Recibe el agente y devuelve la fila de sus relaciones.
-relacionesAgenteN :: Relaciones -> Agente -> Integer -> Set Relacion
-relacionesAgenteN relaciones agenteN pos | pos == agenteN = head relaciones
-                                         | pos < agenteN = relacionesAgenteN (tail relaciones) agenteN (pos+1)
+--Dado el agente devuelve la fila de sus relaciones.
+relacionesAgenteN :: Relaciones -> Agente -> Set Relacion
+relacionesAgenteN relaciones agente = relacionesFilaN relaciones agente 1
 
---Recibe una lista de relaciones de un agente y devuelve su relacion con otro agente
-relacionAgenteNM :: Set Relacion -> Agente -> Integer -> Relacion
-relacionAgenteNM relacionesN agente pos | pos == agente = head relacionesN
-                                        | pos < agente = relacionAgenteNM (tail relacionesN) agente (pos+1)
+relacionesFilaN :: Relaciones -> Agente -> Integer -> Set Relacion
+relacionesFilaN relaciones agenteN pos | pos == agenteN = head relaciones
+                                       | pos < agenteN = relacionesFilaN (tail relaciones) agenteN (pos+1)
 
---2. Que dado un agente, el n´umero total de agentes del sistema y un estado determinado, indique
+--Dada una lista de relaciones de un agente devuelve su relacion con otro agente
+relacionAgenteNM :: Set Relacion -> Agente -> Relacion
+relacionAgenteNM relaciones agente = relacionesPosicionNM relaciones agente 1
+
+relacionesPosicionNM :: Set Relacion -> Agente -> Integer -> Relacion
+relacionesPosicionNM relacionesN agente pos | pos == agente = head relacionesN
+                                            | pos < agente = relacionesPosicionNM (tail relacionesN) agente (pos+1)
+
+
+--2. Que dado un agente, el nuumero total de agentes del sistema y un estado determinado, indique
 --el conjunto de agentes enemigos.
 enemigos :: Agente -> Integer -> Estado -> Set Agente
-enemigos agente cantidadAgentes estado | not (agentePertenece estado agente) = estado
-                                       | otherwise = quitarAgentes agentes estado
+enemigos agente cantidadAgentes estado | agentePertenece estado agente = quitarAgentes agentes estado
+                                       | otherwise = estado
                                          where agentes = [1..cantidadAgentes]
 
 --Auxiliares:
---Recibe una lista de agentes y un agente, y devuelve si el agente pertence o no a la lista
+--Dada una lista de agentes y un agente, indica si el agente pertence o no a la lista
 agentePertenece :: Set Agente -> Agente -> Bool
 agentePertenece [] _ = False
-agentePertenece estado agente | head estado == agente = True
-                              | otherwise = agentePertenece (tail estado) agente
+agentePertenece (headEstado:tailEstado) agente | headEstado == agente = True
+                                               | otherwise = agentePertenece (tailEstado) agente
 
 --Recibe dos listas de agentes y devuelve la resta de ambas
 quitarAgentes :: Set Agente -> Set Agente -> Set Agente
 quitarAgentes [] _ = []
-quitarAgentes (headAgentes:tailAgentes) estado | not (agentePertenece estado headAgentes) = headAgentes : quitarAgentes tailAgentes estado
-                                               | otherwise = quitarAgentes tailAgentes estado
+quitarAgentes (headAgentes:tailAgentes) estado | agentePertenece estado headAgentes = quitarAgentes tailAgentes estado
+                                               | otherwise = headAgentes : quitarAgentes tailAgentes estado
+
 
 --3. Que dado un agente, devuelve su frustracion que es la suma de los valores de su relación con cada uno de los
 --agentes del otro bando.
 frustracion :: Agente -> Relaciones -> Estado -> Frustracion
-frustracion agente relaciones estado = sumatoriaFrustracion (relacionesAgenteN  relaciones agente 1) (enemigos agente (cantAgentes) estado)
+frustracion agente relaciones estado = sumatoriaFrustracion (relacionesAgenteN  relaciones agente) (enemigos agente (cantAgentes) estado)
                                        where cantAgentes = toInteger (length relaciones)
 
 --Auxiliares:
---Recibe las relaciones de un agente y sus enemigos y suma la relacion con cada uno de ellos
+--Dadas las relaciones de un agente y sus enemigos, suma la relacion con cada uno de ellos
 sumatoriaFrustracion :: Set Relacion -> Set Agente -> Frustracion
 sumatoriaFrustracion relacionesN [] = 0
-sumatoriaFrustracion relacionesN enemigos = relacionAgenteNM relacionesN (head enemigos) 1 + sumatoriaFrustracion relacionesN (tail enemigos)
+sumatoriaFrustracion relacionesN enemigos = relacionAgenteNM relacionesN (head enemigos) + sumatoriaFrustracion relacionesN (tail enemigos)
+
 
 --4. Que dado las relaciones y un estado, devuelve la energia total del sistema, es decir, la suma de las frustraciones
 --de cada agente
 --Como las relaciones son simétricas, la suma de frustraciones de todos los agentes de un bando es igual a la suma de
 -- frustraciones de los agentes del otro. Luego, calculamos una y la duplicamos para la enemigos total
 energia :: Relaciones -> Estado -> Energia
-energia relaciones estado = 2 * (energiaUnBando relaciones estado estado)
+energia relaciones estado = 2 * (energiaUnBando relaciones estado)
 
 --Auxiliares:
---Recibe la matriz de relaciones, un estado y la lista de agentes del estado sobre la cual hacemos la recursión y
--- devuelve la suma de las frustraciones de todos los agentes del estado.
-energiaUnBando :: Relaciones -> Estado -> Set Agente -> Energia
-energiaUnBando _ _ [] = 0
-energiaUnBando relaciones estado (headAgentes:tailAgentes) = frustracion headAgentes relaciones estado + energiaUnBando relaciones estado tailAgentes
+--Dada una matriz de relaciones, un estado y la lista de agentes del estado devuelve la suma de las frustraciones de todos los agentes del estado.
+energiaUnBando :: Relaciones -> Estado -> Energia
+energiaUnBando relaciones estado = energiaUnBandoRecursion relaciones estado estado
+
+energiaUnBandoRecursion :: Relaciones -> Estado -> Set Agente -> Energia
+energiaUnBandoRecursion _ _ [] = 0
+energiaUnBandoRecursion relaciones estado (headAgentes:tailAgentes) = frustracion headAgentes relaciones estado + energiaUnBandoRecursion relaciones estado tailAgentes
+
 
 --5. Que dado un agente y un estado, cambia al agente de bando
 adyacente :: Agente -> Estado -> Estado
 adyacente agente estado | agentePertenece estado agente = quitarUnAgente agente estado
                         | otherwise = agente : estado
-                        --Recorro una vez para ver si pertenece y otra vez para sacarlo
-
 
 --Auxiliares:
---Recibe un agente y un estado y devuelve el estado sin ese agente
+--Dado un agente y un estado, devuelve el estado sin ese agente
 quitarUnAgente :: Agente -> Estado -> Estado
 quitarUnAgente agente [] = []
 quitarUnAgente agente (headEstado:tailEstado) | headEstado /= agente = headEstado : quitarUnAgente agente tailEstado
                                               | otherwise = tailEstado
 
--- dadas las relaciones t un estado , te dice si ese estado es estable o no
+
+--6.Dadas las relaciones t un estado , te dice si ese estado es estable o no
 esEstable :: Relaciones -> Estado -> Bool
 esEstable _ []= False
-esEstable relaciones estado | energia relaciones estado <= estadoAdMenorEnergia relaciones estado (todosLosAdyacentes estado) = True
+esEstable relaciones estado | energia relaciones estado <= estadoAdMenorEnergia relaciones estado adyacentes = True
                             | otherwise = False
+                              where adyacentes = todosLosAdyacentes estado
 
---Auxiliare
---dado un estado, devuelve todos los estados adyacentes de ese estado
+--Auxiliares
+--Dado un estado, devuelve todos los estados adyacentes de ese estado
 todosLosAdyacentes :: Estado -> Set Estado
 todosLosAdyacentes estado = todosLosAdyacentesRecursion estado estado
 
---Hace la recursion de todos los estados para encontrar todos los adyacentes
 todosLosAdyacentesRecursion :: Estado -> Estado -> Set Estado
 todosLosAdyacentesRecursion [] _ = []
 todosLosAdyacentesRecursion estado estadoFijo = adyacente (head estado) estadoFijo : todosLosAdyacentesRecursion (tail estado) estadoFijo
 
 --Dadas las relaciones, el estado y los estados adyacentes, devuelve la energia del estado con menor energia
 estadoAdMenorEnergia :: Relaciones -> Estado -> Set Estado -> Energia
-estadoAdMenorEnergia relaciones estado estadosAdyaentes | length estadosAdyaentes == 0 = energia relaciones estado
-                                                        | energia relaciones estado <= energia relaciones headAd = estadoAdMenorEnergia relaciones estado tailAd
-                                                        | otherwise = estadoAdMenorEnergia relaciones headAd tailAd
-                                                          where headAd = head estadosAdyaentes
-                                                                tailAd = tail estadosAdyaentes
+estadoAdMenorEnergia relaciones estado adyacentes | length adyacentes == 0 = energia relaciones estado
+                                                  | energia relaciones estado <= energia relaciones headAd = estadoAdMenorEnergia relaciones estado tailAd
+                                                  | otherwise = estadoAdMenorEnergia relaciones headAd tailAd
+                                                    where headAd = head adyacentes
+                                                          tailAd = tail adyacentes
 
---Dado el n´umero de agentes del sistema, indica las posibles formas de formar bandos sin repetir estados indistinguibles. 
+
+--7. Dado el nuumero de agentes del sistema, indica las posibles formas de formar bandos sin repetir estados indistinguibles. 
 estadosPosibles :: Integer -> Set Estado
 estadosPosibles 1 = [[1]]
 estadosPosibles cantidadAgentes = (estadosCantMenos1) ++ (agregarAgenteAEstados cantidadAgentes estadosCantMenos1)
@@ -111,18 +123,20 @@ agregarAgenteAEstados:: Agente -> Set Estado -> Set Estado
 agregarAgenteAEstados _ [] = []
 agregarAgenteAEstados cantidadAgentes (headEstados:tailEstados) = (headEstados ++ [cantidadAgentes]) : (agregarAgenteAEstados cantidadAgentes tailEstados)
 
+
+--8.Que enumera todos los estados estables junto con su energia. 
 predicciones :: Relaciones -> [(Estado, Energia)]
-predicciones [[]] = error "no hay relaciones"
+predicciones [[]] = []
 predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAgentes)
                            where cantidadAgentes = toInteger (length (head relaciones))
 
 --Auxiliare de predicciones
-auxPredicciones :: Relaciones -> Set Estado ->[(Estado,Energia)]
+auxPredicciones :: Relaciones -> Set Estado -> [(Estado,Energia)]
 auxPredicciones _ [] = []
 auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles)
  | esEstable relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
  | otherwise = siguientePrediccion
-   where siguientePrediccion = auxPredicciones relaciones tailEstados
+   where siguientePrediccion = auxPredicciones relaciones tailEstadosPosibles
 
 
 
