@@ -111,7 +111,7 @@ estadoAdMenorEnergia relaciones estado adyacentes | length adyacentes == 0 = ene
                                                           tailAd = tail adyacentes
 
 
---7. Dado el nuumero de agentes del sistema, indica las posibles formas de formar bandos sin repetir estados indistinguibles. 
+--7. Dado el nuumero de agentes del sistema, indica las posibles formas de formar bandos sin repetir estados indistinguibles.
 estadosPosibles :: Integer -> Set Estado
 estadosPosibles 1 = [[1]]
 estadosPosibles cantidadAgentes = (estadosCantMenos1) ++ (agregarAgenteAEstados cantidadAgentes estadosCantMenos1)
@@ -124,7 +124,7 @@ agregarAgenteAEstados _ [] = []
 agregarAgenteAEstados cantidadAgentes (headEstados:tailEstados) = (headEstados ++ [cantidadAgentes]) : (agregarAgenteAEstados cantidadAgentes tailEstados)
 
 
---8.Que enumera todos los estados estables junto con su energia. 
+--8.Que enumera todos los estados estables junto con su energia.
 predicciones :: Relaciones -> [(Estado, Energia)]
 predicciones [[]] = []
 predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAgentes)
@@ -133,10 +133,9 @@ predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAg
 --Auxiliare de predicciones
 auxPredicciones :: Relaciones -> Set Estado -> [(Estado,Energia)]
 auxPredicciones _ [] = []
-auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles)
- | esEstable relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
- | otherwise = siguientePrediccion
-   where siguientePrediccion = auxPredicciones relaciones tailEstadosPosibles
+auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles) | esEstable relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
+                                                                     | otherwise = siguientePrediccion
+                                                                       where siguientePrediccion = auxPredicciones relaciones tailEstadosPosibles
 
 
 
@@ -182,3 +181,29 @@ adyacente2 agente estado | length estadoSinAgente == length estado = agente : es
 --1) Recorremos todos los agentes una vez para ver si pertenece, y en el peor de los casos por segunda vez para quitarlo.
 --2) Recorremos todos los agentes una vezpara quitarlo, y comparamos con la funcion length
 --No sabemos que procedimiento usa el length pero: si los recorre => los recorre 3 veces => la 1 es mas optima. Si no hay que ver como funciona.
+
+-- la opcional:
+
+nombreAgente :: Agente -> [String] -> Integer -> String
+
+nombreAgente agente nombres p | agente == p = head nombres
+                              | otherwise = nombreAgente agente (tail nombres) (p+1)
+
+
+--
+nombreTodosLosAgentes:: Estado -> [String]
+nombreTodosLosAgentes [] = []
+nombreTodosLosAgentes estado = [(nombreAgente (head estado) nombresSegundaGuerra 1)] ++ nombreTodosLosAgentes( tail estado)
+
+cambiaNombres :: (Estado,Energia) -> (([String],[String]),Energia)
+
+cambiaNombres (estado,energia) = ((nombreTodosLosAgentes estado , nombreTodosLosAgentes (agentesEnemigos estado [1..(toInteger (length nombresSegundaGuerra))])),energia )
+
+--
+cambiaTodosLosNombres :: [(Estado,Energia)] -> [(([String],[String]),Energia)]
+cambiaTodosLosNombres []=[]
+cambiaTodosLosNombres lista = [cambiaNombres (head lista)] ++ cambiaTodosLosNombres (tail lista)
+
+
+mostrarPrediccionesSegundaGuerra :: [(([String],[String]),Energia)]
+mostrarPrediccionesSegundaGuerra = cambiaTodosLosNombres (predicciones relacionesSegundaGuerra)
