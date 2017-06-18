@@ -133,7 +133,7 @@ predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAg
 --Auxiliare de predicciones
 auxPredicciones :: Relaciones -> Set Estado -> [(Estado,Energia)]
 auxPredicciones _ [] = []
-auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles) | esEstable relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
+auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles) | esEstable2 relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
                                                                      | otherwise = siguientePrediccion
                                                                        where siguientePrediccion = auxPredicciones relaciones tailEstadosPosibles
 
