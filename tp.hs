@@ -89,7 +89,7 @@ quitarUnAgente agente (headEstado:tailEstado) | headEstado /= agente = headEstad
                                               | otherwise = tailEstado
 
 
---6.Dadas las relaciones t un estado , te dice si ese estado es estable o no
+--6.Dadas las relaciones de un estado , te dice si ese estado es estable o no
 esEstable :: Relaciones -> Estado -> Bool
 esEstable relaciones estado = menorEnergia relaciones estado (toInteger (length relaciones))
 --Auxiliares
@@ -119,10 +119,10 @@ predicciones [[]] = []
 predicciones relaciones = auxPredicciones relaciones (estadosPosibles cantidadAgentes)
                            where cantidadAgentes = toInteger (length (head relaciones))
 
---Auxiliare de predicciones
+--Auxiliares de predicciones
 auxPredicciones :: Relaciones -> Set Estado -> [(Estado,Energia)]
 auxPredicciones _ [] = []
-auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles) | esEstable2 relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
+auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles) | esEstable relaciones headEstadosPosibles = [(headEstadosPosibles, energia relaciones headEstadosPosibles)] ++ siguientePrediccion
                                                                      | otherwise = siguientePrediccion
                                                                        where siguientePrediccion = auxPredicciones relaciones tailEstadosPosibles
 
