@@ -7,37 +7,9 @@ type Estado = Set Agente
 type Relaciones = [[Float]]
 type Frustracion = Float
 type Energia = Float
-type Relacion = Float
 
 relacionesEjemplo :: Relaciones
 relacionesEjemplo = [[0, 2, -3], [2, 0, 5.2], [-3, 5.2, 0]]
-
-relaciones5 :: Relaciones
-relaciones5 = [[0.0, 2.0, -3.0, 2.3, 5.4],
-               [2.0, 0.0, 5.2, -2.4, 0.4],
-               [-3.0, 5.2, 0, -1.7, -0.4],
-               [2.3, -2.4, -1.7, 0.0, 0.2],
-               [5.4, 0.4, -0.4, 0.2, 0.0]]
-relacionEj2 :: Relaciones
-relacionEj2 =  [[0,-1,1,-1],
-                [-1,0,-1,1],
-                [1,-1,0,1],
-                [-1,1,1,0]]
-
---
-relacionEj3 :: Relaciones
-relacionEj3 = [[0,-1,-1,-1],
-               [-1,0,-1,1],
-               [-1,-1,0,1],
-               [-1,1,1,0]]
-
---
-relacionEj4 :: Relaciones
-relacionEj4= [[0,1,1,-1],
-              [1,0,-1,1],
-              [1,-1,0,1],
-              [-1,1,1,0]]
-
 
 --b)
 relacionesSegundaGuerra :: Relaciones

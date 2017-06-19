@@ -1,5 +1,8 @@
 import Datos
 
+type Relacion = Float
+
+
 --1. Que dados dos agentes, indique cual es su relacion.
 relacion :: Relaciones -> Agente -> Agente -> Float
 relacion relaciones agenteN agenteM = relacionAgenteNM (relacionesAgenteN relaciones agenteN) agenteM
@@ -24,7 +27,7 @@ relacionesPosicionNM relacionesN agente pos | pos == agente = head relacionesN
 
 --2. Que dado un agente, el nuumero total de agentes del sistema y un estado determinado, indique
 --el conjunto de agentes enemigos.
-enemigos :: Agente -> Integer -> Estado -> Set Agente
+enemigos :: Agente -> Integer -> Estado -> [Agente]
 enemigos agente cantidadAgentes estado | agentePertenece estado agente = quitarAgentes agentes estado
                                        | otherwise = estado
                                          where agentes = [1..cantidadAgentes]
@@ -88,31 +91,17 @@ quitarUnAgente agente (headEstado:tailEstado) | headEstado /= agente = headEstad
 
 --6.Dadas las relaciones t un estado , te dice si ese estado es estable o no
 esEstable :: Relaciones -> Estado -> Bool
-esEstable _ []= False
-esEstable relaciones estado | energia relaciones estado <= estadoAdMenorEnergia relaciones estado adyacentes = True
-                            | otherwise = False
-                              where adyacentes = todosLosAdyacentes estado
-
+esEstable relaciones estado = menorEnergia relaciones estado (toInteger (length relaciones))
 --Auxiliares
---Dado un estado, devuelve todos los estados adyacentes de ese estado
-todosLosAdyacentes :: Estado -> Set Estado
-todosLosAdyacentes estado = todosLosAdyacentesRecursion estado estado
 
-todosLosAdyacentesRecursion :: Estado -> Estado -> Set Estado
-todosLosAdyacentesRecursion [] _ = []
-todosLosAdyacentesRecursion estado estadoFijo = adyacente (head estado) estadoFijo : todosLosAdyacentesRecursion (tail estado) estadoFijo
-
---Dadas las relaciones, el estado y los estados adyacentes, devuelve la energia del estado con menor energia
-estadoAdMenorEnergia :: Relaciones -> Estado -> Set Estado -> Energia
-estadoAdMenorEnergia relaciones estado adyacentes | length adyacentes == 0 = energia relaciones estado
-                                                  | energia relaciones estado <= energia relaciones headAd = estadoAdMenorEnergia relaciones estado tailAd
-                                                  | otherwise = estadoAdMenorEnergia relaciones headAd tailAd
-                                                    where headAd = head adyacentes
-                                                          tailAd = tail adyacentes
-
+--Dadas las relaciones, el estado y la cantidad de agentes, devuelve si el estado es estable o no
+menorEnergia :: Relaciones -> Estado -> Integer -> Bool
+menorEnergia _ _ 0 = True
+menorEnergia relaciones estado cantidadAgentes | energia relaciones estado > energia relaciones (adyacente cantidadAgentes estado) = False
+                                                | otherwise = menorEnergia relaciones estado (cantidadAgentes - 1)
 
 --7. Dado el nuumero de agentes del sistema, indica las posibles formas de formar bandos sin repetir estados indistinguibles.
-estadosPosibles :: Integer -> Set Estado
+estadosPosibles :: Integer -> Set (Set Integer)
 estadosPosibles 1 = [[1]]
 estadosPosibles cantidadAgentes = (estadosCantMenos1) ++ (agregarAgenteAEstados cantidadAgentes estadosCantMenos1)
                                   where estadosCantMenos1 = estadosPosibles (cantidadAgentes-1)
@@ -138,34 +127,38 @@ auxPredicciones relaciones (headEstadosPosibles:tailEstadosPosibles) | esEstable
                                                                        where siguientePrediccion = auxPredicciones relaciones tailEstadosPosibles
 
 
+-- Ej opcional:
+
+mostrarPrediccionesSegundaGuerra :: [(([String],[String]),Energia)]
+mostrarPrediccionesSegundaGuerra = cambiaTodosLosNombres (predicciones relacionesSegundaGuerra)
+
+cambiaTodosLosNombres :: [(Estado,Energia)] -> [(([String],[String]),Energia)]
+cambiaTodosLosNombres []=[]
+cambiaTodosLosNombres lista = [cambiaNombres (head lista)] ++ cambiaTodosLosNombres (tail lista)
+
+cambiaNombres :: (Estado,Energia) -> (([String],[String]),Energia)
+
+cambiaNombres (estado,energia) = ((nombreTodosLosAgentes estado , nombreTodosLosAgentes (agentesEnemigos estado [1..(toInteger (length nombresSegundaGuerra))])),energia )
+
+nombreTodosLosAgentes:: Estado -> [String]
+nombreTodosLosAgentes [] = []
+nombreTodosLosAgentes estado = [(nombreAgente (head estado) nombresSegundaGuerra 1)] ++ nombreTodosLosAgentes( tail estado)
+
+
+nombreAgente :: Agente -> [String] -> Integer -> String
+
+nombreAgente agente nombres p | agente == p = head nombres
+                              | otherwise = nombreAgente agente (tail nombres) (p+1)
 
 
 --Otras soluciones:
 --Nos parecio interesante dejar otras soluciones que encontramos para los mismos probelmas, y algunas con un pequeño comentario
-esEstable2 :: Relaciones -> Estado -> Bool
-esEstable2 relaciones estado = menorEnergia2 relaciones estado (toInteger (length relaciones))
-
-menorEnergia2 :: Relaciones -> Estado -> Integer -> Bool
-menorEnergia2 _ _ 0 = True
-menorEnergia2 relaciones estado cantidadAgentes | energia relaciones estado > energia relaciones (adyacente cantidadAgentes estado) = False
-                                                | otherwise = menorEnergia2 relaciones estado (cantidadAgentes - 1)
-
-esEstable3 :: Relaciones -> Estado -> Bool
-esEstable3 _ []=False
-esEstable3 relaciones estado | energia relaciones estado <= menorEnergia3 relaciones estado (energia relaciones estado) estado = True
-                             | otherwise = False
-
-menorEnergia3 :: Relaciones -> Estado -> Energia -> Estado -> Energia
-menorEnergia3 relaciones estado energiaEstado estado2 | length estado == 1 && enerAdyacente <= energiaEstado = enerAdyacente
-                                                      | enerAdyacente <= energiaEstado = menorEnergia3 relaciones (tail estado) enerAdyacente estado2
-                                                      | otherwise = energiaEstado
-                                                        where enerAdyacente = energia relaciones (adyacente (head estado) estado2)
 
 enemigosConOrden :: Agente -> Integer -> Estado -> Set Agente
 enemigosConOrden agente cantidadAgentes estado | agentePertenece estado agente = agentesEnemigos estado agentes
                                                | otherwise = estado
                                                  where agentes = [1..cantidadAgentes]
---Es mucho mas eficiente si los agentes estan ordenados!!!
+--Es mas eficiente si los agentes estan ordenados!!!
 agentesEnemigos :: Estado -> Set Agente -> Estado
 agentesEnemigos _ [] = []
 agentesEnemigos [] agentes = agentes
@@ -182,28 +175,30 @@ adyacente2 agente estado | length estadoSinAgente == length estado = agente : es
 --2) Recorremos todos los agentes una vezpara quitarlo, y comparamos con la funcion length
 --No sabemos que procedimiento usa el length pero: si los recorre => los recorre 3 veces => la 1 es mas optima. Si no hay que ver como funciona.
 
--- la opcional:
+--Matrices de Prueba
 
-nombreAgente :: Agente -> [String] -> Integer -> String
-
-nombreAgente agente nombres p | agente == p = head nombres
-                              | otherwise = nombreAgente agente (tail nombres) (p+1)
-
-
---
-nombreTodosLosAgentes:: Estado -> [String]
-nombreTodosLosAgentes [] = []
-nombreTodosLosAgentes estado = [(nombreAgente (head estado) nombresSegundaGuerra 1)] ++ nombreTodosLosAgentes( tail estado)
-
-cambiaNombres :: (Estado,Energia) -> (([String],[String]),Energia)
-
-cambiaNombres (estado,energia) = ((nombreTodosLosAgentes estado , nombreTodosLosAgentes (agentesEnemigos estado [1..(toInteger (length nombresSegundaGuerra))])),energia )
+relaciones5 :: Relaciones
+relaciones5 = [[0.0, 2.0, -3.0, 2.3, 5.4],
+               [2.0, 0.0, 5.2, -2.4, 0.4],
+               [-3.0, 5.2, 0, -1.7, -0.4],
+               [2.3, -2.4, -1.7, 0.0, 0.2],
+               [5.4, 0.4, -0.4, 0.2, 0.0]]
+relacionEj2 :: Relaciones
+relacionEj2 =  [[0,-1,1,-1],
+                [-1,0,-1,1],
+                [1,-1,0,1],
+                [-1,1,1,0]]
 
 --
-cambiaTodosLosNombres :: [(Estado,Energia)] -> [(([String],[String]),Energia)]
-cambiaTodosLosNombres []=[]
-cambiaTodosLosNombres lista = [cambiaNombres (head lista)] ++ cambiaTodosLosNombres (tail lista)
+relacionEj3 :: Relaciones
+relacionEj3 = [[0,-1,-1,-1],
+               [-1,0,-1,1],
+               [-1,-1,0,1],
+               [-1,1,1,0]]
 
-
-mostrarPrediccionesSegundaGuerra :: [(([String],[String]),Energia)]
-mostrarPrediccionesSegundaGuerra = cambiaTodosLosNombres (predicciones relacionesSegundaGuerra)
+--
+relacionEj4 :: Relaciones
+relacionEj4= [[0,1,1,-1],
+              [1,0,-1,1],
+              [1,-1,0,1],
+              [-1,1,1,0]]
